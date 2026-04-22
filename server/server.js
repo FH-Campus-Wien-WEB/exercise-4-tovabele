@@ -6,6 +6,9 @@ const bcrypt = require("bcrypt");
 const config = require("./config.js");
 const movieModel = require("./movie-model.js");
 const userModel = require("./user-model.js");
+const env = require('dotenv').config();
+
+console.log("omdb key: " +  process.env.OMDB_API_KEY);
 
 const app = express();
 
