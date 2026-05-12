@@ -212,9 +212,19 @@ window.onload = function () {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    // Task 1.1: Implement the login submit flow to call `POST /login` 
-    // with username and password, handle errors, save the response 
-    // into `currentSession`, then call `updateUI()` and `loadMovies()`.
+    // Task 1.1: Implement the login submit flow to call `POST /login`
+    // with username and password, handle errors, save the response
+      // into `currentSession`, then call `updateUI()` and `loadMovies()`.
+      try {
+          const response =  fetch("https://localhost:3000/login", {
+              method: "POST",
+              // Set the FormData instance as the request body
+              body: formData,
+          });
+          //console.log( response.json());
+      } catch (e) {
+          console.error(e);
+      }
 
   });
 
