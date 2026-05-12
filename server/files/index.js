@@ -146,87 +146,100 @@ function searchMovies(query) {
 }
 
 window.onload = function () {
-  // Check session
-  fetch("/session")
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json();
-    })
-    .then(data => {
-      currentSession = data || null;
-      updateUI();
-    })
-    .catch(error => {
-      console.error('Failed to load session:', error);
-      currentSession = null;
-      updateUI();
+    // Check session
+    fetch("/session")
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            currentSession = data || null;
+            updateUI();
+        })
+        .catch(error => {
+            console.error('Failed to load session:', error);
+            currentSession = null;
+            updateUI();
+        });
+
+    function renderUserGreeting() {
+        const greetingElement = document.getElementById('userGreeting');
+        if (currentSession) {
+            // Task 1.2: Render a user greeting to `#userGreeting`
+            // using `firstName`, `lastName`, and the server-provided
+            // login timestamp.
+            const welcomeMessage = "Welcome back, " + currentSession;
+            greetingElement.textContent = welcomeMessage;
+
+        } else {
+            greetingElement.textContent = messages.loggedOutGreeting;
+        }
+    }
+
+    function updateUI() {
+        const authBtn = document.getElementById('authBtn');
+        const addMoviesBtn = document.getElementById('addMoviesBtn');
+
+        renderUserGreeting();
+        updateGenres();
+
+        if (currentSession) {
+            authBtn.textContent = 'Logout';
+            authBtn.onclick = () => {
+                fetch("/logout")
+                    .then(response => {
+                        if (response.ok) {
+                            currentSession = null;
+                            updateUI();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Logout failed:', error);
+                    });
+            };
+            addMoviesBtn.style.display = 'inline';
+        } else {
+            removeMovies();
+            authBtn.textContent = 'Login';
+            authBtn.onclick = () => {
+                const loginForm = document.getElementById('loginForm');
+                loginForm.reset();
+                document.getElementById('loginDialog').showModal();
+            };
+            addMoviesBtn.style.display = 'none';
+        }
+    }
+
+    // Login dialog
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        // Task 1.1: Implement the login submit flow to call `POST /login`
+        // with username and password, handle errors, save the response
+        // into `currentSession`, then call `updateUI()` and `loadMovies()`.
+        sendLogin(formData);
     });
-
-  function renderUserGreeting() {
-    const greetingElement = document.getElementById('userGreeting');
-    if (currentSession) {
-      // Task 1.2: Render a user greeting to `#userGreeting` 
-      // using `firstName`, `lastName`, and the server-provided
-      // login timestamp.
-    } else {
-      greetingElement.textContent = messages.loggedOutGreeting;
-    }
-  }
-
-  function updateUI() {
-    const authBtn = document.getElementById('authBtn');
-    const addMoviesBtn = document.getElementById('addMoviesBtn');
-
-    renderUserGreeting();
-    updateGenres();
-
-    if (currentSession) {
-      authBtn.textContent = 'Logout';
-      authBtn.onclick = () => {
-        fetch("/logout")
-          .then(response => {
-            if (response.ok) {
-              currentSession = null;
-              updateUI();
+    async function sendLogin(formData) {
+        console.log(formData);
+        try {
+            const response = await fetch("http://localhost:3000/login", {
+                method: "POST",
+                // Set the FormData instance as the request body
+                body: formData,
+            });
+            if (response.status == "200") {
+                currentSession = response;
+                console.log("status OK");
+                updateUI();
+                loadMovies();
             }
-          })
-          .catch(error => {
-            console.error('Logout failed:', error);
-          });
-      };
-      addMoviesBtn.style.display = 'inline';
-    } else {
-      removeMovies();
-      authBtn.textContent = 'Login';
-      authBtn.onclick = () => {
-        const loginForm = document.getElementById('loginForm');
-        loginForm.reset();
-        document.getElementById('loginDialog').showModal();
-      };
-      addMoviesBtn.style.display = 'none';
+        } catch (e) {
+            console.error(e);
+        }
     }
-  }
 
-  // Login dialog
-  document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-
-    // Task 1.1: Implement the login submit flow to call `POST /login`
-    // with username and password, handle errors, save the response
-      // into `currentSession`, then call `updateUI()` and `loadMovies()`.
-      try {
-          const response =  fetch("https://localhost:3000/login", {
-              method: "POST",
-              // Set the FormData instance as the request body
-              body: formData,
-          });
-          //console.log( response.json());
-      } catch (e) {
-          console.error(e);
-      }
-
-  });
+  
 
   document.getElementById('cancelLogin').addEventListener('click', () => {
     document.getElementById('loginDialog').close();
