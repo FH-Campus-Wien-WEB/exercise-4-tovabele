@@ -152,7 +152,7 @@ app.get("/search", isAuthenticated, function (req, res) {
     }
 
     const url = `http://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${config.omdbApiKey}`;
-    console.log("TOVA -- the bloody omdb query uri "+  url);
+    //console.log("TOVA -- the bloody omdb query uri "+  url);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.omdbTimeoutMs);

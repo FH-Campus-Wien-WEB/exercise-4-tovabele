@@ -99,6 +99,18 @@ function formatRuntime(runtime) {
   return hours + "h " + minutes + "m";
 }
 
+export class ResultBuilder extends ElementBuilder {
+    constructor(movie, addMovie, isLoggedIn) {
+        super("article").id(movie.imdbID).append(new ElementBuilder("h3").text(movie.Title)).append(new ElementBuilder("p").text(movie.Year));
+
+        if (isLoggedIn) {
+            this.append(
+                new ElementBuilder("p")
+                .append(new ButtonBuilder("Add").onclick(() => addMovie(movie.imdbID))))
+        };
+    }
+}
+
 export class MovieBuilder extends ElementBuilder {
   constructor(movie, deleteMovie, isLoggedIn) {
     super("article")

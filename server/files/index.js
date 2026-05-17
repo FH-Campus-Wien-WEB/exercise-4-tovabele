@@ -1,4 +1,4 @@
-import { ButtonBuilder, ElementBuilder, MovieBuilder } from "./builders.js";
+import { ButtonBuilder, ElementBuilder, MovieBuilder, ResultBuilder } from "./builders.js";
 
 // Externalized message strings
 const messages = {
@@ -52,9 +52,10 @@ function updateGenres() {
 }
 
 function removeResults() {
-    const resultsDiv = document.querySelector("searchResults");
-    while (resultsDiv.childElementCount > 0) {
-        resultsDiv.firstChild.remove();
+    const results = document.getElementById("searchResults");
+    console.log(results);
+    while (results.childElementCount > 0) {
+        results.firstChild.remove();
     }
 }
 function removeMovies() {
@@ -73,7 +74,6 @@ function loadMovies(genre) {
     fetch(url)
         .then(response => {
             removeMovies();
-            const mainElement = document.querySelector("main");
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response.json();
@@ -143,7 +143,7 @@ function searchMovies(query) {
             removeMovies();
             const resultsDiv = document.getElementById("searchResults");
             resultsDiv.innerHTML = '';
-            results.forEach(result => new MovieBuilder(result, addMovie, Boolean(currentSession)).appendTo(resultsDiv));
+            results.forEach(result => new ResultBuilder(result, addMovie, Boolean(currentSession)).appendTo(resultsDiv));
         })
         .catch(error => {
             console.error('Search failed:', error);
@@ -218,6 +218,7 @@ window.onload = function () {
                 removeMovies();
                 //console.log("show search dialog");
                 document.getElementById("searchDialog").showModal();
+                removeResults();
             };
         } else {
             removeMovies();
