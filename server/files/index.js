@@ -167,12 +167,11 @@ window.onload = function () {
         if (currentSession) {
             // Task 1.2: Render a user greeting to `#userGreeting`
             // using `firstName`, `lastName`, and the server-provided login timestamp.
-
-
+            /* debug:
             Object.entries(currentSession).forEach(([key, value]) => {
                 console.log(key, value)
             });
-
+            */
             const welcomeMessage = "Welcome back, " + currentSession.firstName + " " + currentSession.lastName + " " + currentSession.loginTime;
             greetingElement.textContent = welcomeMessage;
 
@@ -189,12 +188,16 @@ window.onload = function () {
         updateGenres();
 
         if (currentSession) {
+            document.getElementById('loginDialog').close();
+
             authBtn.textContent = 'Logout';
             authBtn.onclick = () => {
+                console.log("logout clicked...");
                 fetch("/logout")
                     .then(response => {
                         if (response.ok) {
                             currentSession = null;
+                            console.log("should updatge ui now");
                             updateUI();
                         }
                     })
@@ -247,7 +250,7 @@ window.onload = function () {
                 const data = await response.json();
                 currentSession = data;
 
-                console.log("status OK");
+                //console.log("status OK");
                 updateUI();
                 loadMovies();
             }

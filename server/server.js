@@ -39,11 +39,11 @@ app.post("/login", function (req, res) {
             loginTime: new Date().toISOString(),
         };
         res.send(req.session.user);
-        console.log("TOVA---session sent:");
-        Object.entries(req.session.user).forEach(([key, value]) => {
-            console.log(key, value)
-        });
-
+        /*        console.log("TOVA---session sent:");
+                Object.entries(req.session.user).forEach(([key, value]) => {
+                    console.log(key, value)
+                });
+        */
     } else {
         console.log("TOVA---401 - nix geht! not authorized und so weiter");
         res.sendStatus(401);
@@ -51,19 +51,40 @@ app.post("/login", function (req, res) {
 });
 
 // Task 1.3: Implement the GET `/logout` endpoint and requireLogin
-// protection. Implement logout by destroying the session 
-// with error handling. Protect all endpoints that need 
+// protection. Implement logout by destroying the session
+// with error handling. Protect all endpoints that need
 // authentication with `requireLogin`.
+function isAuthenticated(req, res, next) {
+    if (!req.session.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+    }
+    else next();
+}
+
+
+app.get("/logout", function (req, res) {
+    console.log("logout request received");
+    if (!req.session) {
+        return res.status(400).json({ error: "No session found" });
+    }
+    else {
+        res.sendStatus(200);
+        req.session.destroy();
+    }
+
+
+})
 
 app.get("/session", function (req, res) {
     if (req.session.user) {
+        console.log("TOVA -- /session endpoint detects session, sends session.user");
         res.send(req.session.user);
     } else {
         res.status(401).json(null);
     }
 });
 
-app.get("/movies", function (req, res) {
+app.get("/movies", isAuthenticated, function (req, res) {
     const username = req.session.user.username;
     let movies = Object.values(movieModel.getUserMovies(username));
     const queriedGenre = req.query.genre;
