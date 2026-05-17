@@ -51,6 +51,12 @@ function updateGenres() {
         });
 }
 
+function removeResults() {
+    const resultsDiv = document.querySelector("searchResults");
+    while (resultsDiv.childElementCount > 0) {
+        resultsDiv.firstChild.remove();
+    }
+}
 function removeMovies() {
     const mainElement = document.querySelector("main");
     while (mainElement.childElementCount > 0) {
@@ -124,19 +130,20 @@ function deleteMovie(imdbID) {
 }
 
 function searchMovies(query) {
+
     fetch(`/search?query=${encodeURIComponent(query)}`)
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response.json();
         })
-        .then(results => {
-            const resultsDiv = document.getElementById("searchResults");
-            resultsDiv.innerHTML = '';
-
             // Task 2.2: Render the results returned from the server. Make sure to
             // include an "Add" button for each result that calls `addMovie(imdbID)` when clicked.
             // There is a second part to this task, in `addMovie`
-
+        .then(results => {
+            removeMovies();
+            const resultsDiv = document.getElementById("searchResults");
+            resultsDiv.innerHTML = '';
+            results.forEach(result => new MovieBuilder(result, addMovie, Boolean(currentSession)).appendTo(resultsDiv));
         })
         .catch(error => {
             console.error('Search failed:', error);
@@ -192,12 +199,12 @@ window.onload = function () {
 
             authBtn.textContent = 'Logout';
             authBtn.onclick = () => {
-                console.log("logout clicked...");
+                //console.log("logout clicked...");
                 fetch("/logout")
                     .then(response => {
                         if (response.ok) {
                             currentSession = null;
-                            console.log("should updatge ui now");
+                            //console.log("should updatge ui now");
                             updateUI();
                         }
                     })
@@ -206,6 +213,12 @@ window.onload = function () {
                     });
             };
             addMoviesBtn.style.display = 'inline';
+
+            addMoviesBtn.onclick = () => {
+                removeMovies();
+                //console.log("show search dialog");
+                document.getElementById("searchDialog").showModal();
+            };
         } else {
             removeMovies();
             authBtn.textContent = 'Login';
@@ -269,18 +282,23 @@ window.onload = function () {
     document.getElementById('addMoviesBtn').addEventListener('click', () => {
         const searchForm = document.getElementById('searchForm');
         searchForm.reset();
-        document.getElementById('searchResults').innerHTML = '';
+        //document.getElementById('searchResults').innerHTML = '';
         document.getElementById('searchDialog').showModal();
     });
 
     document.getElementById('searchForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const query = document.getElementById('query').value;
+        console.log("searching for" + query);
+//        removeResults();
+
         searchMovies(query);
     });
 
     document.getElementById('cancelSearch').addEventListener('click', () => {
         document.getElementById('searchDialog').close();
+        //show movies again
+        updateGenres();
     });
 };
 

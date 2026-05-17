@@ -95,7 +95,7 @@ app.get("/movies", isAuthenticated, function (req, res) {
 });
 
 // Configure a 'get' endpoint for a specific movie
-app.get("/movies/:imdbID", function (req, res) {
+app.get("/movies/:imdbID", isAuthenticated, function (req, res) {
     const username = req.session.user.username;
     const id = req.params.imdbID;
     const movie = movieModel.getUserMovie(username, id);
@@ -108,7 +108,7 @@ app.get("/movies/:imdbID", function (req, res) {
 });
 
 // Configure a 'put' endpoint for a specific movie to update or insert a movie
-app.put("/movies/:imdbID", function (req, res) {
+app.put("/movies/:imdbID", isAuthenticated, function (req, res) {
     const username = req.session.user.username;
     const imdbID = req.params.imdbID;
     const exists = movieModel.getUserMovie(username, imdbID) !== undefined;
@@ -123,7 +123,7 @@ app.put("/movies/:imdbID", function (req, res) {
     }
 });
 
-app.delete("/movies/:imdbID", function (req, res) {
+app.delete("/movies/:imdbID", isAuthenticated, function (req, res) {
     const username = req.session.user.username;
     const id = req.params.imdbID;
     if (movieModel.deleteUserMovie(username, id)) {
@@ -134,7 +134,7 @@ app.delete("/movies/:imdbID", function (req, res) {
 });
 
 // Configure a 'get' endpoint for genres of all movies of the current user
-app.get("/genres", function (req, res) {
+app.get("/genres", isAuthenticated, function (req, res) {
     const username = req.session.user.username;
     const genres = movieModel.getGenres(username);
     genres.sort();
@@ -144,7 +144,7 @@ app.get("/genres", function (req, res) {
 /* Task 2.1. Add the GET /search endpoint: Query omdbapi.com and return
    a list of the results you obtain. Only include the properties 
    mentioned in the README when sending back the results to the client. */
-app.get("/search", function (req, res) {
+app.get("/search", isAuthenticated, function (req, res) {
     const username = req.session.user.username;
     const query = req.query.query;
     if (!query) {
@@ -152,6 +152,7 @@ app.get("/search", function (req, res) {
     }
 
     const url = `http://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${config.omdbApiKey}`;
+    console.log("TOVA -- the bloody omdb query uri "+  url);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.omdbTimeoutMs);
