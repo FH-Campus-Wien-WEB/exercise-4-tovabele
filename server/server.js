@@ -28,7 +28,7 @@ app.use(express.static(path.join(__dirname, "files")));
 
 app.post("/login", function (req, res) {
     const { username, password } = req.body;
-    console.log("TOVA---post request received: " + username);
+    //console.log("TOVA---post request received: " + username);
     const user = userModel[username];
     if (user && bcrypt.compareSync(password, user.password)) {
         console.log("TOVA---bcrypt is happy");
@@ -39,7 +39,11 @@ app.post("/login", function (req, res) {
             loginTime: new Date().toISOString(),
         };
         res.send(req.session.user);
-        console.log("TOVA---session sent");
+        console.log("TOVA---session sent:");
+        Object.entries(req.session.user).forEach(([key, value]) => {
+            console.log(key, value)
+        });
+
     } else {
         console.log("TOVA---401 - nix geht! not authorized und so weiter");
         res.sendStatus(401);
@@ -174,6 +178,6 @@ app.get("/search", function (req, res) {
 app.listen(config.port,
     function (err) {
         if (err) console.log(err);
-    }); 
+    });
 
 console.log(`Server now listening on http://localhost:${config.port}/`);
