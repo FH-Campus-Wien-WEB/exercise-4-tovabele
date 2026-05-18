@@ -1,4 +1,4 @@
-    const express = require("express");
+const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const session = require("express-session");
@@ -9,6 +9,11 @@ const userModel = require("./user-model.js");
 const env = require('dotenv').config();
 
 console.log("omdb key: " + process.env.OMDB_API_KEY);
+
+function toYMD(usDateString) {
+    const date = new Date(usDateString).toISOString().split('T')[0];
+    return date;
+}
 
 const app = express();
 
@@ -114,55 +119,73 @@ app.put("/movies/:imdbID", isAuthenticated, function (req, res) {
     const exists = movieModel.getUserMovie(username, imdbID) !== undefined;
 
     if (!exists) {
-        // Task 2.3: Fetch the movie data from OmdbAPI, follow the pattern used further down 
-        // in the GET /search endpoint. Implement conversion of the OmdbAPI response to the 
+        // Task 2.3: Fetch the movie data from OmdbAPI, follow the pattern used further down
+        // in the GET /search endpoint.
+        // Implement conversion of the OmdbAPI response to the 
+        // TOVA: HOW THE FCK ??? 
         // movie format used in the frontend. Make sure to handle errors and timeouts properly.
 
-    const url = `http://www.omdbapi.com/?i=${encodeURIComponent(imdbID)}&apikey=${config.omdbApiKey}`;
-    console.log("TOVA -- query imdbID "+  imdbID);
+        const url = `http://www.omdbapi.com/?i=${encodeURIComponent(imdbID)}&apikey=${config.omdbApiKey}`;
+        console.log("TOVA -- query imdbID " + imdbID);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), config.omdbTimeoutMs);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), config.omdbTimeoutMs);
 
-    fetch(url, { signal: controller.signal })
-        .then(apiRes => {
-            clearTimeout(timeoutId);
-            if (!apiRes.ok) {
-                return res.sendStatus(apiRes.status);
-            }
-            return apiRes.text().then(data => {
-                let response;
-                try {
-                    response = JSON.parse(data);
-                } catch (parseError) {
-                    console.error('Failed to parse OMDb response:', parseError);
-                    return res.sendStatus(500);
+        fetch(url, { signal: controller.signal })
+            .then(apiRes => {
+                clearTimeout(timeoutId);
+                if (!apiRes.ok) {
+                    return res.sendStatus(apiRes.status);
                 }
+                return apiRes.text().then(data => {
+                    let response;
+                    try {
+                        response = JSON.parse(data);
+                    } catch (parseError) {
+                        console.error('Failed to parse OMDb response:', parseError);
+                        return res.sendStatus(500);
+                    }
 
-                if (response.Response === 'True') {
-                    console.log(response);
-                    const results = response.Search
-                        .filter(movie => !movieModel.hasUserMovie(username, movie.imdbID))
-                        .map(movie => ({
-                            Title: movie.Title,
-                            imdbID: movie.imdbID,
-                            Year: isNaN(movie.Year) ? null : parseInt(movie.Year)
-                        }));
-                    res.send(results);
-                } else {
-                    res.send([]);
+                    if (response.Response === 'True') {
+                        console.log(response);
+                        const newUserMovie = {
+                            imdbID: response.imdbID,
+                            Title: response.Title,
+                            Released: toYMD(response.Released),
+                            Runtime: parseInt(response.Runtime),
+                            Genres: response.Genre.split(','),
+                            Directors: response.Director.split(','),
+                            Writers: response.Writer.split(','),
+                            Actors: response.Actors.split(','),
+                            Plot: response.Plot,
+                            Poster: response.Poster,
+                            Metascore: response.Metascore,
+                            imdbRating: response.imdbRating
+                        }
+
+                        newUserMovie.Released = toYMD(response.Released);
+
+
+                        if (movieModel.setUserMovie(username, imdbID, newUserMovie)
+                        ) {
+                            res.sendStatus(200);
+                        }
+                        else {
+                            console.error('Something did not work saving user movie');
+                            res.sendStatus(500);
+                        }
+                    }
+                });
+            })
+            .catch((err) => {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    console.error('OMDb API request timeout');
+                    return res.sendStatus(504);
                 }
+                console.error('OMDb API error:', err);
+                res.sendStatus(500);
             });
-        })
-        .catch((err) => {
-            clearTimeout(timeoutId);
-            if (err.name === 'AbortError') {
-                console.error('OMDb API request timeout');
-                return res.sendStatus(504);
-            }
-            console.error('OMDb API error:', err);
-            res.sendStatus(500);
-        });
 
 
     } else {
