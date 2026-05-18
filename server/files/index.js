@@ -290,8 +290,7 @@ window.onload = function () {
     document.getElementById('searchForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const query = document.getElementById('query').value;
-        console.log("searching for" + query);
-//        removeResults();
+        // console.log("searching for: " + query);
 
         searchMovies(query);
     });
